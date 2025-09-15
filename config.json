@@ -1,0 +1,39 @@
+{
+    "companies": {
+        "OpenAI": {
+            "blog_url": "https://openai.com/blog/",
+            "selectors": {
+                "title": "h3",
+                "date": ".f-caption",
+                "link": "a"
+            }
+        },
+        "Google AI": {
+            "blog_url": "https://ai.googleblog.com/",
+            "selectors": {
+                "title": ".post-title",
+                "date": ".published",
+                "link": "a"
+            }
+        },
+        "Microsoft AI": {
+            "blog_url": "https://blogs.microsoft.com/ai/",
+            "selectors": {
+                "title": "h2",
+                "date": ".byline-date",
+                "link": "a"
+            }
+        },
+        "Anthropic": {
+            "blog_url": "https://www.anthropic.com/news",
+            "selectors": {
+                "title": "h3",
+                "date": ".date",
+                "link": "a"
+            }
+        }
+    },
+    "days_lookback": 7,
+    "request_delay": 2,
+    "timeout": 10
+}
