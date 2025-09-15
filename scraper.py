@@ -61,14 +61,19 @@ class CompetitorScraper:
             soup = BeautifulSoup(response.content, 'html.parser')
             articles = []
 
-            # Find article elements (this is a basic approach)
-            article_elements = soup.find_all(['article', 'div'], class_=lambda x: x and any(
-                keyword in str(x).lower() for keyword in ['post', 'article', 'blog', 'news']
-            ))[:10]  # Limit to 10 most recent
+            # Use more flexible article finding approach
+            if company_name == "Google AI":
+                # Google Research blog specific structure
+                article_elements = soup.find_all('a', href=lambda x: x and '/blog/' in x)[:10]
+            else:
+                # Generic approach for other sites
+                article_elements = soup.find_all(['article', 'div'], class_=lambda x: x and any(
+                    keyword in str(x).lower() for keyword in ['post', 'article', 'blog', 'news']
+                ))[:10]  # Limit to 10 most recent
 
             for element in article_elements:
-                article = self.extract_article_info(element, company_config['selectors'])
-                if article:
+                article = self.extract_article_info(element, company_config['selectors'], company_name, company_config['blog_url'])
+                if article and article['title'] != "No title":
                     articles.append(article)
 
             return articles
@@ -80,20 +85,40 @@ class CompetitorScraper:
             print(f"Unexpected error scraping {company_name}: {e}")
             return []
 
-    def extract_article_info(self, element, selectors):
+    def extract_article_info(self, element, selectors, company_name, base_url):
         try:
-            title_elem = element.find(selectors['title'])
+            # Extract title based on selectors
+            title_elem = None
+            title_selectors = selectors['title'].split(', ')
+            for selector in title_selectors:
+                title_elem = element.select_one(selector.strip())
+                if title_elem:
+                    break
+
+            if not title_elem and element.name == 'a':
+                # For Google AI, the element itself might contain the title
+                title_elem = element.select_one('h3') or element.select_one('h2')
+
             title = title_elem.get_text().strip() if title_elem else "No title"
 
-            link_elem = element.find('a')
-            link = link_elem.get('href', '') if link_elem else ''
+            # Extract link
+            if element.name == 'a':
+                link = element.get('href', '')
+            else:
+                link_elem = element.find('a')
+                link = link_elem.get('href', '') if link_elem else ''
 
             # Make relative links absolute
             if link and link.startswith('/'):
-                link = f"https://openai.com{link}"  # This should be dynamic based on company
+                from urllib.parse import urljoin
+                link = urljoin(base_url, link)
 
-            date_elem = element.find(selectors.get('date', '.date'))
-            date = date_elem.get_text().strip() if date_elem else "Unknown date"
+            # Extract date
+            date_elem = element.select_one(selectors.get('date', 'time'))
+            if date_elem:
+                date = date_elem.get_text().strip() or date_elem.get('datetime', 'Unknown date')
+            else:
+                date = "Unknown date"
 
             return {
                 'title': title,

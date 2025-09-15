@@ -9,10 +9,10 @@
             }
         },
         "Google AI": {
-            "blog_url": "https://ai.googleblog.com/",
+            "blog_url": "https://research.google/blog/",
             "selectors": {
-                "title": ".post-title",
-                "date": ".published",
+                "title": "a h3, a h2",
+                "date": "time",
                 "link": "a"
             }
         },
